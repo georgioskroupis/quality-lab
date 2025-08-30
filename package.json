@@ -1,0 +1,18 @@
+{
+  "name": "qualitylab",
+  "version": "0.0.1",
+  "description": "Quality Lab CLI — scan, minimal checks, and simple reports.",
+  "bin": {
+    "qualitylab": "bin/qualitylab.js"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "start": "node bin/qualitylab.js",
+    "dev": "node bin/qualitylab.js --help"
+  }
+}
+
