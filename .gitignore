@@ -1,0 +1,15 @@
+# Node and build outputs
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+
+# OS
+.DS_Store
+
+# Quality Lab artifacts/state
+qualitylab-report/
+.qualitylab/.config-hash
+.qualitylab/state.json
+
