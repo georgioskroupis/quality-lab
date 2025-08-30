@@ -1,0 +1,77 @@
+name: "Quality Lab Scan"
+description: "Run Quality Lab scan, upload HTML report, and comment on PRs"
+author: "Quality Lab"
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+
+    - name: Run Quality Lab scan
+      shell: bash
+      env:
+        QUALITYLAB_URL: ${{ inputs.lighthouse-url }}
+      run: |
+        node "${{ github.action_path }}/bin/qualitylab.js" scan . --json
+
+    - name: Upload Action Board artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: qualitylab-report
+        path: qualitylab-report
+
+    - name: Build PR summary
+      id: summary
+      shell: bash
+      run: |
+        node "${{ github.action_path }}/scripts/summary.js" > summary.md
+        echo "body<<EOF" >> "$GITHUB_OUTPUT"
+        cat summary.md >> "$GITHUB_OUTPUT"
+        echo "EOF" >> "$GITHUB_OUTPUT"
+
+    - name: Comment on PR
+      if: inputs.comment-pr == 'true' && (github.event_name == 'pull_request' || github.event_name == 'pull_request_target')
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ github.token }}
+        script: |
+          const body = process.env.body;
+          const {owner, repo} = context.repo;
+          const issue_number = context.payload.pull_request.number;
+          // Try to find an existing bot comment to update
+          const { data: comments } = await github.rest.issues.listComments({ owner, repo, issue_number, per_page: 100 });
+          const marker = '<!-- qualitylab-summary -->';
+          const existing = comments.find(c => c.user.type === 'Bot' && (c.body||'').includes(marker));
+          const finalBody = `${body}\n\n${marker}`;
+          if (existing) {
+            await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body: finalBody });
+          } else {
+            await github.rest.issues.createComment({ owner, repo, issue_number, body: finalBody });
+          }
+      env:
+        body: ${{ steps.summary.outputs.body }}
+
+    - name: Enforce fail-on threshold
+      if: inputs.fail-on != '' && inputs.fail-on != 'none'
+      shell: bash
+      run: |
+        node "${{ github.action_path }}/scripts/fail-on.js" "${{ inputs.fail-on }}"
+
+inputs:
+  fail-on:
+    description: "Fail if any finding is at or above this severity (critical|high|medium|low|info|none)"
+    required: false
+    default: "none"
+  comment-pr:
+    description: "Post a summary comment on pull requests"
+    required: false
+    default: "false"
+  lighthouse-url:
+    description: "Target URL for Lighthouse (optional)"
+    required: false
+
+branding:
+  icon: "check-circle"
+  color: "blue"
