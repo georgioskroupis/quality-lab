@@ -8,7 +8,8 @@ const threshold = String(process.argv[2] || 'none').toLowerCase();
 const rank = { none: 0, info: 1, low: 2, medium: 3, high: 4, critical: 5 };
 const tRank = rank[threshold] ?? 0;
 
-const p = path.resolve(process.cwd(), "qualitylab-report", "findings.json");
+const base = process.env.QUALITYLAB_OUT_DIR || path.resolve(process.cwd(), "qualitylab-report");
+const p = path.resolve(base, "findings.json");
 let arr = [];
 try { arr = JSON.parse(fs.readFileSync(p, "utf8")); } catch { arr = []; }
 
@@ -24,4 +25,3 @@ if (hit) {
 } else {
   console.log(`qualitylab: fail-on threshold '${threshold}' not met`);
 }
-

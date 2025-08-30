@@ -13,6 +13,7 @@ runs:
       shell: bash
       env:
         QUALITYLAB_URL: ${{ inputs.lighthouse-url }}
+        QUALITYLAB_OUT_DIR: ${{ github.workspace }}/qualitylab/qualitylab-report
       run: |
         node "${{ github.action_path }}/bin/qualitylab.js" scan . --json
 
@@ -20,11 +21,13 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: qualitylab-report
-        path: qualitylab-report
+        path: ${{ github.workspace }}/qualitylab/qualitylab-report
 
     - name: Build PR summary
       id: summary
       shell: bash
+      env:
+        QUALITYLAB_OUT_DIR: ${{ github.workspace }}/qualitylab/qualitylab-report
       run: |
         node "${{ github.action_path }}/scripts/summary.js" > summary.md
         echo "body<<EOF" >> "$GITHUB_OUTPUT"
@@ -56,6 +59,8 @@ runs:
     - name: Enforce fail-on threshold
       if: inputs.fail-on != '' && inputs.fail-on != 'none'
       shell: bash
+      env:
+        QUALITYLAB_OUT_DIR: ${{ github.workspace }}/qualitylab/qualitylab-report
       run: |
         node "${{ github.action_path }}/scripts/fail-on.js" "${{ inputs.fail-on }}"
 

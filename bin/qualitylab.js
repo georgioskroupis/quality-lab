@@ -179,8 +179,11 @@ async function run() {
     report.summary.cost = { cpuMinutes };
 
     // Export reports to ./qualitylab-report/
-    // Always write artifacts under ./qualitylab/qualitylab-report (self-contained)
-    const outDir = path.resolve(__dirname, "..", "qualitylab-report");
+    // Always write artifacts under ./qualitylab/qualitylab-report by default.
+    // Allow override via QUALITYLAB_OUT_DIR (used in CI to point to workspace).
+    const outDir = process.env.QUALITYLAB_OUT_DIR
+      ? path.resolve(process.env.QUALITYLAB_OUT_DIR)
+      : path.resolve(__dirname, "..", "qualitylab-report");
     const simplified = simplifyFindings(report.findings);
     // Load persisted state from repo (optional)
     // repoRoot defined above

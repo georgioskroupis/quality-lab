@@ -4,7 +4,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const p = path.resolve(process.cwd(), "qualitylab-report", "findings.json");
+const base = process.env.QUALITYLAB_OUT_DIR || path.resolve(process.cwd(), "qualitylab-report");
+const p = path.resolve(base, "findings.json");
 let arr = [];
 try { arr = JSON.parse(fs.readFileSync(p, "utf8")); } catch { arr = []; }
 
